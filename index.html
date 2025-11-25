@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QA Evaluation App - Invisalign</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f4f4f4;
+    }
+
+    h1 { text-align: center; }
+
+    .top-inputs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .input-group { flex: 1; min-width: 200px; display: flex; flex-direction: column; }
+    .input-group label { margin-bottom: 5px; font-weight: bold; }
+    .input-group input { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
+
+    .main { display: flex; gap: 20px; align-items: flex-start; }
+
+    #feedback {
+      width: 45%;
+      height: 70vh;
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      min-width: 450px;
+      resize: both;
+    }
+
+    .criteria-list {
+      width: 55%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .criterion {
+      background: white;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    button {
+      margin-top: 5px;
+      margin-right: 10px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .yes { background-color: #d4edda; color: #155724; }
+    .no { background-color: #f8d7da; color: #721c24; }
+    .feedback {  background-color: #fff3cd;  color: #856404; }
+    .copy-btn { margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border-radius: 5px; border: none; cursor: pointer; }
+
+    @media (max-width: 900px) {
+      .main { flex-direction: column; }
+      #feedback, .criteria-list { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>QA Evaluation App Invisalign</h1>
+
+<div class="top-inputs">
+  <div class="input-group">
+    <label for="agentName">Agent's Name</label>
+    <input type="text" id="agentName" placeholder="Enter agent's name">
+  </div>
+  <div class="input-group">
+    <label for="callerName">Customer's Name</label>
+    <input type="text" id="callerName" placeholder="Enter customer's name">
+  </div>
+  <div class="input-group">
+    <label for="callReason">Reason</label>
+    <input type="text" id="callReason" placeholder="Enter reason for the interaction">
+  </div>
+  <div class="input-group">
+    <label for="orderId">Order ID</label>
+    <input type="text" id="orderId" placeholder="Enter order ID">
+  </div>
+  <div class="input-group">
+    <label for="ticketId">Ticket ID</label>
+    <input type="text" id="ticketId" placeholder="Enter ticket ID">
+  </div>
+
+<div class="input-group">
+  <label for="criteriaSet">Select Guideline</label>
+  <select id="criteriaSet" onchange="loadCriteriaSet()">
+    <option value="Calls">Calls</option>
+    <option value="Sales">Sales</option>
+    <option value="Chat">Chat</option>
+  </select>
+</div>
+</div>
+<div class="main">
+  <div>
+    <textarea id="feedback" placeholder="Generated feedback will appear here..."></textarea>
+    <br>
+    <button class="copy-btn" onclick="copyFeedback()">Copy All Feedback</button>
+  </div>
+
+  <div class="criteria-list" id="criteria-container"></div>
+</div>
+
+<script>
+    let accomplishments = [];
+let developmentFeedback = [];
+const criteriaSet = {
+  
+  Calls: [
+{ label: "Answered promptly with greeting", yes: "✅ You did a nice job responding within the first 5 seconds, which meets our pillar of 'Respond with Empathy'.", no: "🚩 Answered the call within 5 seconds by using the correct greeting. (4 pts)", feedback: "⚠️ Answered the call within 5 seconds by using the correct greeting. (4 pts)" },
+{ label: "Understood customer needs", yes: "✅ You really took the time to understand the customer's needs, which perfectly reflects our 'Ask' value.", no: "🚩 Agent understood customer's needs and had an awareness of relevant details. (8 pts)", feedback: "⚠️ Agent understood customer's needs and had an awareness of relevant details. (8 pts)" },
+{ label: "Personalized with name", yes: "✅ Used the customer’s name naturally to personalize the interaction and build rapport.", no: "🚩 Personalized the interaction with the caller's name. (3 pts)", feedback: "⚠️ Personalized the interaction with the caller's name. (3 pts)" },
+{ label: "Validated the call", yes: "✅ Great work validating the account to make sure that the customer's information is secure.", no: "🚩 Validated the call at the beginning by using all available resources. (8 pts)", feedback: "⚠️ Validated the call at the beginning by using all available resources. (8 pts)" },
+{ label: "Professional and friendly attitude", yes: "✅ Maintained a professional yet friendly tone, keeping the interaction pleasant and respectful.", no: "🚩 Showed professionalism and a friendly attitude. (6 pts)", feedback: "⚠️ Showed professionalism and a friendly attitude. (6 pts)" },
+{ label: "Used empathy and apology", yes: "✅ Expressed empathy appropriately and provided a genuine apology when needed.", no: "🚩 Used empathy and apology statements. (5 pts)", feedback: "⚠️ Used empathy and apology statements. (5 pts)" },
+{ label: "Answered with updated info", yes: "✅ Our 'Respond with Empathy' pillar was reflected in your responses to our customers' questions, educating them with the correct information/process and orienting them accordingly.", no: "🚩 Answered the Customer's questions with the most updated information. (10 pts)", feedback: "⚠️ Answered the Customer's questions with the most updated information. (10 pts)" },
+{ label: "Showed ownership", yes: "✅ Fantastic work taking immediate action and assuming ownership to ensure the best possible outcome, showing our 'Respond with empathy' pillar.", no: "🚩 Showed empowerment and took ownership to resolve needs. (10 pts)", feedback: "⚠️ Showed empowerment and took ownership to resolve needs. (10 pts)" },
+{ label: "Provided additional information", yes: "✅ Additional information was provided during the interaction meeting our 'Respond with Empathy' criteria.", no: "🚩 Provided additional information related to the request. (4 pts)", feedback: "⚠️ Provided additional information related to the request. (4 pts)" },
+{ label: "Offered additional assistance", yes: "✅ Engaged with our customer by offering additional assistance making sure our customer has all the information needed.", no: "🚩 Offered additional assistance. (4 pts)", feedback: "⚠️ Offered additional assistance. (4 pts)" },
+{ label: "Used formal closing", yes: "✅ You parted professionally and closed the interaction with a positive experience, reflecting our 'Connect' pillar.", no: "🚩 Used a formal parting phrase. (3 pts)", feedback: "⚠️ Used a formal parting phrase. (3 pts)" },
+{ label: "Followed hold procedure", yes: "✅ The correct hold procedure was followed.", no: "🚩 Used the correct hold procedure. (5 pts)", feedback: "⚠️ Used the correct hold procedure. (5 pts)" },
+{ label: "Avoided long pauses", yes: "✅ Great work keeping a fluent conversation, avoiding uncomfortable silences, keeping an active presence; This helped you connect with the customer.", no: "🚩 Avoided pauses, no more than 10 seconds. (4 pts)", feedback: "⚠️ Avoided pauses, no more than 10 seconds. (4 pts)" },
+{ label: "Transferred correctly", yes: "✅ Performed a proper and smooth transfer to the correct department.", no: "🚩 Correct conference/ warm transfer made to the right department. (3 pts)", feedback: "⚠️ Correct conference/ warm transfer made to the right department. (3 pts)" },
+{ label: "Positive customer impact", yes: "✅ Created a positive experience that clearly left the customer satisfied and reassured.", no: "🚩 Were the customer emotions positively impacted? (2 pts)", feedback: "⚠️ Were the customer emotions positively impacted? (2 pts)" },
+{ label: "Documented correctly", yes: "✅ Documented accurately under the correct PID, contact, or order as required.", no: "🚩 Documented under the correct PID, Contact, Order. (4 pts)", feedback: "⚠️ Documented under the correct PID, Contact, Order. (4 pts)" },
+{ label: "Classified mandatory fields", yes: "✅ All mandatory fields were properly filled out before closing the ticket.", no: "🚩 Classified all mandatory ticket fields. (4 pts)", feedback: "⚠️ Classified all mandatory ticket fields. (4 pts)" },
+{ label: "Used proper subject", yes: "✅ Entered a clear and relevant subject line for the ticket.", no: "🚩 Used a proper subject. (2 pts)", feedback: "⚠️ Used a proper subject. (2 pts)" },
+{ label: "Documented issue and actions", yes: "✅ Logged the customer’s issue and all actions taken to resolve it clearly.", no: "🚩 Documented the issue/ questions and actions taken to solve it. (5 pts)", feedback: "⚠️ Documented the issue/ questions and actions taken to solve it. (5 pts)" },
+{ label: "Assigned correct status and owner", yes: "✅ Assigned the correct ticket status and owner as required.", no: "🚩 Ticket status and ticket owner adequately assigned (when applicable). (4 pts)", feedback: "⚠️ Ticket status and ticket owner adequately assigned (when applicable). (4 pts)" },
+{ label: "Attached evidence", yes: "✅ Attached all necessary evidence supporting the case resolution.", no: "🚩 Evidence was attached to the ticket. (2 pts)", feedback: "⚠️ Evidence was attached to the ticket. (2 pts)" },
+{ label: "Documented interaction", yes: "✅ Fully documented the interaction following process requirements.", no: "🚩 Failed to document the interaction.", feedback: "⚠️ Failed to document the interaction." },
+{ label: "No sensitive info released", yes: "✅ Protected customer information and avoided releasing any sensitive data.", no: "🚩 Released sensitive information to an unknown requestor.", feedback: "⚠️ Released sensitive information to an unknown requestor." },
+{ label: "Professional behavior", yes: "✅ Displayed professionalism throughout the interaction.", no: "🚩 The agent was unprofessional.", feedback: "⚠️ The agent was unprofessional." },
+{ label: "Did not disconnect", yes: "✅ Ensured the call was completed without abrupt disconnection.", no: "🚩 Disconnected the call.", feedback: "⚠️ Disconnected the call." },
+{ label: "Closed line properly", yes: "✅ Verified that the line was properly closed after the call ended.", no: "🚩 Left the call line open after the call finished (1 min).", feedback: "⚠️ Left the call line open after the call finished (1 min)." },
+{ label: "Recording disclaimer", yes: "✅ Delivered the recording disclaimer correctly at the beginning of the call.", no: "🚩 Recording Disclaimer not used.", feedback: "⚠️ Recording Disclaimer not used." },
+{ label: "Call not abandoned", yes: "✅ Managed the call responsibly from start to finish without abandonment.", no: "🚩 The call was abandoned.", feedback: "⚠️ The call was abandoned." },
+{ label: "Followed up with customer", yes: "✅ Ensured the customer received updates and follow-up as needed.", no: "🚩 Failed to update and/or follow up with the customer.", feedback: "⚠️ Failed to update and/or follow up with the customer." },
+],
+
+Sales: [
+{ label: "Answered promptly with greeting", yes: "✅ You did a nice job responding within the first 5 seconds, which meets our pillar of 'Respond with Empathy'.", no: "🚩 Answered the call within 5 seconds using the correct greeting (5 pts)", feedback: "⚠️ Answered the call within 5 seconds using the correct greeting (5 pts)" },
+{ label: "Understood customer needs", yes: "✅ You really took the time to understand the customer's needs, which perfectly reflects our 'Ask' value.", no: "🚩 Understood customers' needs and awareness of relevant details (8 pts)", feedback: "⚠️ Understood customers' needs and awareness of relevant details (8 pts)" },
+{ label: "Personalized with name", yes: "✅ Addressed the customer by name naturally, creating a warm and personal interaction. This represents our CARE pillar 'Connect'.", no: "🚩 Personalized with Customer's name (3 pts)", feedback: "⚠️ Personalized with Customer's name (3 pts)" },
+{ label: "Professional and friendly attitude", yes: "✅ Maintained a positive and approachable tone throughout the call, representing our CARE value 'Respond with empathy'.", no: "🚩 Showed professionalism and a friendly attitude (6 pts)", feedback: "⚠️ Showed professionalism and a friendly attitude (6 pts)" },
+{ label: "Used empathy and apology", yes: "✅ Expressed empathy sincerely and offered an appropriate apology when needed. This represents our CARE value 'Respond with empathy'.", no: "🚩 Used empathy and apology statements (5 pts)", feedback: "⚠️ Used empathy and apology statements (5 pts)" },
+{ label: "Answered with updated info", yes: "✅ Displayed our CARE pillar 'Respond with empathy' by providing accurate and up-to-date information appropriately. Well done.", no: "🚩 Answered Customer's questions with the most updated information (12 pts)", feedback: "⚠️ Answered Customer's questions with the most updated information (12 pts)" },
+{ label: "Showed ownership", yes: "✅ Fantastic work taking immediate action and assuming ownership to ensure the best possible outcome, showing our 'Respond with empathy' pillar.", no: "🚩 Showed empowerment and took ownership to resolve needs (12 pts)", feedback: "⚠️ Showed empowerment and took ownership to resolve needs (12 pts)" },
+{ label: "Offered additional assistance", yes: "✅ Engaged with our customer by offering additional assistance making sure our customer has all the information needed.", no: "🚩 Offered additional assistance (4 pts)", feedback: "⚠️ Offered additional assistance (4 pts)" },
+{ label: "Used formal closing", yes: "✅ You parted professionally and closed the interaction with a positive experience, reflecting our 'Connect' pillar.", no: "🚩 Used a formal parting phrase (3 pts)", feedback: "⚠️ Used a formal parting phrase (3 pts)" },
+{ label: "Followed hold procedure", yes: "✅ The correct hold procedure was followed.", no: "🚩 Hold Procedure and Communication Management (5 pts)", feedback: "⚠️ Hold Procedure and Communication Management (5 pts)" },
+{ label: "Avoided long pauses", yes: "✅ The conversation felt smooth and natural without unnecessary silence.", no: "🚩 Avoided pauses, no more than 10 seconds (4 pts)", feedback: "⚠️ Avoided pauses, no more than 10 seconds (4 pts)" },
+{ label: "Transferred correctly", yes: "✅ Completed a proper and seamless transfer to the right department.", no: "🚩 Conference/ warm transfer to the correct department (3 pts)", feedback: "⚠️ Conference/ warm transfer to the correct department (3 pts)" },
+{ label: "Positive customer impact", yes: "✅ Created a positive experience that left the customer feeling supported.", no: "🚩 Were the Customer's emotions positively impacted? (2 pts)", feedback: "⚠️ Were the Customer's emotions positively impacted? (2 pts)" },
+{ label: "Documented correctly", yes: "✅ Nice job documenting under the correct DID/PID.", no: "🚩 Documented under the correct PID, Contact, Order (4 pts)", feedback: "⚠️ Documented under the correct PID, Contact, Order (4 pts)" },
+{ label: "Email and SMS etiquette", yes: "✅ Written communication followed etiquette standards and looked professional.", no: "🚩 Email and SMS Etiquette (7 pts)", feedback: "⚠️ Email and SMS Etiquette (7 pts)" },
+{ label: "Classified mandatory fields", yes: "✅ All required ticket fields were completed correctly.", no: "🚩 Classified all mandatory ticket fields (4 pts)", feedback: "⚠️ Classified all mandatory ticket fields (4 pts)" },
+{ label: "Used proper subject", yes: "✅ Used a clear and relevant subject line that reflected the case details.", no: "🚩 Used a proper subject (2 pts)", feedback: "⚠️ Used a proper subject (2 pts)" },
+{ label: "Documented issue and actions", yes: "✅ Documentation clearly outlined both the issue and the steps taken to resolve it.", no: "🚩 Documented the issue/ questions and actions taken to solve it (5 pts)", feedback: "⚠️ Documented the issue/ questions and actions taken to solve it (5 pts)" },
+{ label: "Assigned correct status and owner", yes: "✅ Updated the ticket with the right status and ownership information.", no: "🚩 Correctly assigned the ticket status and ticket owner (when applicable) (4 pts)", feedback: "⚠️ Correctly assigned the ticket status and ticket owner (when applicable) (4 pts)" },
+{ label: "Attached evidence", yes: "✅ Included all necessary evidence to support the case resolution.", no: "🚩 Evidence attached to the ticket (2 pts)", feedback: "⚠️ Evidence attached to the ticket (2 pts)" },
+{ label: "Documented interaction", yes: "✅ Interaction details were captured completely and in line with process expectations.", no: "🚩 Failed to document the interaction", feedback: "⚠️ Failed to document the interaction" },
+{ label: "No sensitive info released", yes: "✅ Handled all customer information responsibly and securely.", no: "🚩 Released sensitive information to an unknown requester", feedback: "⚠️ Released sensitive information to an unknown requester" },
+{ label: "Professional behavior", yes: "✅ Displayed consistent professionalism during the entire interaction.", no: "🚩 The agent was unprofessional", feedback: "⚠️ The agent was unprofessional" },
+{ label: "Did not disconnect", yes: "✅ The call was ended appropriately without abrupt disconnection.", no: "🚩 Disconnected Calls or Chats", feedback: "⚠️ Disconnected Calls or Chats" },
+{ label: "Closed line properly", yes: "✅ Ensured the line was fully closed after finishing the call.", no: "🚩 Left the line open after the call/ Chat finished", feedback: "⚠️ Left the line open after the call/ Chat finished" },
+{ label: "Sent message to customer", yes: "✅ Follow-up message was sent successfully and on time.", no: "🚩 Failed to send the text to the Customer", feedback: "⚠️ Failed to send the text to the Customer" },
+{ label: "Acceptable grammar", yes: "✅ Writing was clear, easy to read, and free of major grammatical issues.", no: "🚩 The text has 4 or more grammar mistakes", feedback: "⚠️ The text has 4 or more grammar mistakes" },
+{ label: "Recording disclaimer", yes: "✅ Recording disclaimer was delivered correctly at the start of the call.", no: "🚩 Recording Disclaimer", feedback: "⚠️ Recording Disclaimer" },
+{ label: "Call not abandoned", yes: "✅ Managed the entire call responsibly and stayed connected until resolution.", no: "🚩 Call abandoned", feedback: "⚠️ Call abandoned" },
+{ label: "Chat or SMS not abandoned", yes: "✅ Maintained active engagement throughout the conversation without leaving it unattended.", no: "🚩 Chat/ SMS abandonment", feedback: "⚠️ Chat/ SMS abandonment" },
+
+],
+Chat: [
+{ label: "Personalized chat", yes: "✅ You personalized the chat by addressing the customer by name, creating a friendly tone.", no: "🚩 Personalized the chat with the customer's name. (5pts)", feedback: "⚠️ Personalized the chat with the customer's name. (5pts)" },
+{ label: "Understood customer needs", yes: "✅ You clearly understood the customer's needs and considered all relevant details.", no: "🚩 Understood customers' needs and awareness of relevant details. (8pts)", feedback: "⚠️ Understood customers' needs and awareness of relevant details. (8pts)" },
+{ label: "Professional and friendly attitude", yes: "✅ You maintained a professional and approachable attitude throughout the interaction.", no: "🚩 Showed professionalism and a friendly attitude. (6pts)", feedback: "⚠️ Showed professionalism and a friendly attitude. (6pts)" },
+{ label: "Used empathy and apology", yes: "✅ You expressed empathy and offered apologies when appropriate, showing care and understanding.", no: "🚩 Used empathy and apology statements. (6pts)", feedback: "⚠️ Used empathy and apology statements. (6pts)" },
+{ label: "Answered with updated info", yes: "✅ You provided the customer with accurate and up-to-date information.", no: "🚩 Answered customers' questions with the most updated information. (10pts)", feedback: "⚠️ Answered customers' questions with the most updated information. (10pts)" },
+{ label: "Showed ownership", yes: "✅ You took ownership of the situation and worked proactively to resolve the customer’s needs.", no: "🚩 Showed empowerment and took ownership to resolve needs. (12pts)", feedback: "⚠️ Showed empowerment and took ownership to resolve needs. (12pts)" },
+{ label: "Offered additional assistance", yes: "✅ You went the extra mile by offering further help before ending the chat.", no: "🚩 Offered additional assistance. (5pts)", feedback: "⚠️ Offered additional assistance. (5pts)" },
+{ label: "Used formal closing", yes: "✅ You ended the conversation with a professional and polite closing phrase.", no: "🚩 Used a formal parting phrase. (5pts)", feedback: "⚠️ Used a formal parting phrase. (5pts)" },
+{ label: "Kept conversation active", yes: "✅ You maintained an active, natural flow and managed pause time effectively.", no: "🚩 Kept the conversation active and/or used the pause time appropriately (6pts)", feedback: "⚠️ Kept the conversation active and/or used the pause time appropriately (6pts)" },
+{ label: "Clear and correct text", yes: "✅ The text was easy to understand and free from grammar or spelling issues.", no: "🚩 Text is fully comprehensible with the proper grammar and spelling. (12pts)", feedback: "⚠️ Text is fully comprehensible with the proper grammar and spelling. (12pts)" },
+{ label: "Connected to correct department", yes: "✅ You connected the customer to the correct department promptly.", no: "🚩 Connected to the correct department. (4pts)", feedback: "⚠️ Connected to the correct department. (4pts)" },
+{ label: "Correct documentation location", yes: "✅ You documented the case under the correct PID, Contact, or Order.", no: "🚩 Documented under the correct PID, Contact, Order. (4pts)", feedback: "⚠️ Documented under the correct PID, Contact, Order. (4pts)" },
+{ label: "Classified mandatory fields", yes: "✅ All mandatory ticket fields were properly classified.", no: "🚩 Classified all mandatory ticket fields. (4pts)", feedback: "⚠️ Classified all mandatory ticket fields. (4pts)" },
+{ label: "Used proper subject", yes: "✅ You entered a relevant and clear subject line for the ticket.", no: "🚩 Used a proper subject. (2pts)", feedback: "⚠️ Used a proper subject. (2pts)" },
+{ label: "Documented issue and actions", yes: "✅ You accurately documented the issue and actions taken to solve it.", no: "🚩 Documented the issue/ questions and actions taken to solve it. (5pts)", feedback: "⚠️ Documented the issue/ questions and actions taken to solve it. (5pts)" },
+{ label: "Assigned correct status and owner", yes: "✅ You assigned the correct ticket status and owner when applicable.", no: "🚩 Correctly assigned the ticket status and ticket owner (when applicable). (4pts)", feedback: "⚠️ Correctly assigned the ticket status and ticket owner (when applicable). (4pts)" },
+{ label: "Attached evidence", yes: "✅ You attached all necessary evidence to the ticket.", no: "🚩 Evidence attached to the ticket. (2pts)", feedback: "⚠️ Evidence attached to the ticket. (2pts)" },
+{ label: "Documented interaction", yes: "✅ The interaction was properly documented and saved in the system.", no: "🚩 Failed to document the interaction.", feedback: "⚠️ Failed to document the interaction." },
+{ label: "No sensitive info released", yes: "✅ You safeguarded customer information and avoided sharing sensitive data.", no: "🚩 Released sensitive information to an unknown requester.", feedback: "⚠️ Released sensitive information to an unknown requester." },
+{ label: "Professional behavior", yes: "✅ You maintained professional behavior throughout the interaction.", no: "🚩 The agent was unprofessional.", feedback: "⚠️ The agent was unprofessional." },
+{ label: "Did not disconnect chat", yes: "✅ You stayed connected until the chat was properly closed.", no: "🚩 Disconnected the chat.", feedback: "⚠️ Disconnected the chat." },
+{ label: "Closed chat properly", yes: "✅ You closed the chat line correctly after finishing the interaction.", no: "🚩 Left the chat line open after the chat finished (3 min).", feedback: "⚠️ Left the chat line open after the chat finished (3 min)." },
+{ label: "Recording disclaimer", yes: "✅ You followed the recording disclaimer process as required.", no: "🚩 Recording Disclaimer.", feedback: "⚠️ Recording Disclaimer." },
+{ label: "Sent message to customer", yes: "✅ You successfully sent the message to the customer.", no: "🚩 Failed to send the text to the customer.", feedback: "⚠️ Failed to send the text to the customer." },
+{ label: "Acceptable grammar", yes: "✅ Grammar and spelling met quality standards with minimal errors.", no: "🚩 The text has 4 or more grammar mistakes.", feedback: "⚠️ The text has 4 or more grammar mistakes." },
+
+],
+};
+
+ const container = document.getElementById("criteria-container");
+const feedbackBox = document.getElementById("feedback");
+
+function loadCriteriaSet() {
+  const selectedSet = document.getElementById("criteriaSet").value;
+  const currentCriteria = criteriaSet[selectedSet] || [];
+  container.innerHTML = "";
+
+  currentCriteria.forEach((item, index) => {
+    const div = document.createElement("div");
+    div.className = "criterion";
+    div.innerHTML = `
+      <strong>${index + 1}. ${item.label}</strong><br>
+      <button class="yes" onclick="addFeedback(\`${item.yes}\`)">Yes ✅</button>
+      <button class="no" onclick="addFeedback(\`${item.no}\`)">No 🚩</button>
+      <button class="feedback" onclick="addFeedback(\`${item.feedback}\`)">Feedback ⚠️</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+
+
+  function addFeedback(text) {
+  feedbackBox.value += text + "\n\n";
+  if (text.startsWith("✅")) {
+    accomplishments.push(text);
+  } else if (text.startsWith("🚩")) {
+    developmentFeedback.push(text);
+  }
+}
+
+
+  function clearAll() {
+  document.getElementById("agentName").value = "";
+  document.getElementById("callerName").value = "";
+  document.getElementById("callReason").value = "";
+  document.getElementById("orderId").value = "";
+  document.getElementById("ticketId").value = "";
+  document.getElementById("feedback").value = "";
+  accomplishments = [];
+  developmentFeedback = [];
+}
+
+window.onload = loadCriteriaSet;
+
+
+ function copyFeedback() {
+  const agent = document.getElementById("agentName").value.trim();
+  const caller = document.getElementById("callerName").value.trim();
+  const reason = document.getElementById("callReason").value.trim();
+  const orderId = document.getElementById("orderId").value.trim();
+  const ticketId = document.getElementById("ticketId").value.trim();
+  const rawFeedback = document.getElementById("feedback").value.trim();
+
+  const lines = rawFeedback.split("\n").map(line => line.trim()).filter(line => line !== "");
+
+  const accomplishments = [];
+  const developmentFeedback = [];
+  const feedbackOnly = [];
+
+  let currentBlock = null;
+
+  lines.forEach(line => {
+    if (line.startsWith("✅")) {
+      currentBlock = { type: "accomplishment", text: [line] };
+      accomplishments.push(currentBlock);
+    } else if (line.startsWith("🚩")) {
+      currentBlock = { type: "development", text: [line] };
+      developmentFeedback.push(currentBlock);
+    } else if (line.startsWith("⚠️")) {
+      currentBlock = { type: "feedback", text: [line] };
+      feedbackOnly.push(currentBlock);
+    } else if (currentBlock) {
+      currentBlock.text.push(line);
+    }
+  });
+
+  let header = "";
+  if (agent || caller || reason || orderId || ticketId) {
+    header += `Customer: ${caller || "N/A"}\n`;
+    header += `Reason: ${reason || "N/A"}\n`;
+    header += `Order ID: ${orderId || "N/A"}\n`;
+    header += `Ticket ID: ${ticketId || "N/A"}\n\n____________________________\n\n`;
+  }
+
+  let greeting = agent ? `Hello ${agent},\n\nYou can find the details about your evaluation below:\n\n` : "";
+  let parting = '____________________________\n\nThanks for reading your feedback.\n\nKeep checking your metrics:\n\nhttps://apps.powerapps.com/play/5195f0c7-73f5-4350-bd49-dfedf64c3c17';
+
+  let finalText = greeting + header;
+
+  if (accomplishments.length > 0) {
+    finalText += "Accomplishments:\n\n";
+    finalText += accomplishments.map(block => block.text.join("\n")).join("\n\n") + "\n\n";
+  }
+
+  if (developmentFeedback.length > 0) {
+    finalText += "____________________________\n\nFeedback for Development:\n\n";
+    finalText += developmentFeedback.map(block => block.text.join("\n")).join("\n\n") + "\n\n";
+  }
+
+  if (feedbackOnly.length > 0) {
+    finalText += "____________________________\n\nFeedback only (no deductions done, but keep in mind for future interactions):\n\n";
+    finalText += feedbackOnly.map(block => block.text.join("\n")).join("\n\n") + "\n\n";
+  }
+
+  finalText += parting;
+
+  navigator.clipboard.writeText(finalText);
+}
+</script>
+
+<button onclick="clearAll()" style="margin-top: 10px; padding: 10px 20px;">Clear All</button>
+</body>
+</html>
