@@ -92,8 +92,8 @@
     <input type="text" id="callReason" placeholder="Enter reason for the interaction">
   </div>
   <div class="input-group">
-    <label for="orderId">Order ID</label>
-    <input type="text" id="orderId" placeholder="Enter order ID">
+    <label for="orderId">Order ID/Patient ID</label>
+    <input type="text" id="orderId" placeholder="Enter order/patient ID">
   </div>
   <div class="input-group">
     <label for="ticketId">Ticket ID</label>
@@ -301,7 +301,7 @@ window.onload = loadCriteriaSet;
   if (agent || caller || reason || orderId || ticketId) {
     header += `Customer: ${caller || "N/A"}\n`;
     header += `Reason: ${reason || "N/A"}\n`;
-    header += `Order ID: ${orderId || "N/A"}\n`;
+    header += `Order/Patient ID: ${orderId || "N/A"}\n`;
     header += `Ticket ID: ${ticketId || "N/A"}\n\n____________________________\n\n`;
   }
 
@@ -334,3 +334,4 @@ window.onload = loadCriteriaSet;
 <button onclick="clearAll()" style="margin-top: 10px; padding: 10px 20px;">Clear All</button>
 </body>
 </html>
+
