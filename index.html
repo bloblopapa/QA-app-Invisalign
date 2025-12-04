@@ -142,6 +142,7 @@ const criteriaSet = {
 { label: "Positive customer impact", yes: "✅ Created a positive experience that clearly left the customer satisfied and reassured.", no: "🚩 Were the customer emotions positively impacted? (2 pts)", feedback: "⚠️ Were the customer emotions positively impacted? (2 pts)" },
 { label: "Documented correctly", yes: "✅ Documented accurately under the correct PID, contact, or order as required.", no: "🚩 Documented under the correct PID, Contact, Order. (4 pts)", feedback: "⚠️ Documented under the correct PID, Contact, Order. (4 pts)" },
 { label: "Classified mandatory fields", yes: "✅ All mandatory fields were properly filled out before closing the ticket.", no: "🚩 Classified all mandatory ticket fields. (4 pts)", feedback: "⚠️ Classified all mandatory ticket fields. (4 pts)" },
+{ label: "KB attached", yes: "✅ Well done attaching the KB to the ticket.", no: "🚩 Classified all mandatory ticket fields. (4 pts)", feedback: "⚠️ Classified all mandatory ticket fields. (4 pts)" },
 { label: "Used proper subject", yes: "✅ Entered a clear and relevant subject line for the ticket.", no: "🚩 Used a proper subject. (2 pts)", feedback: "⚠️ Used a proper subject. (2 pts)" },
 { label: "Documented issue and actions", yes: "✅ Logged the customer’s issue and all actions taken to resolve it clearly.", no: "🚩 Documented the issue/ questions and actions taken to solve it. (5 pts)", feedback: "⚠️ Documented the issue/ questions and actions taken to solve it. (5 pts)" },
 { label: "Assigned correct status and owner", yes: "✅ Assigned the correct ticket status and owner as required.", no: "🚩 Ticket status and ticket owner adequately assigned (when applicable). (4 pts)", feedback: "⚠️ Ticket status and ticket owner adequately assigned (when applicable). (4 pts)" },
@@ -306,7 +307,7 @@ window.onload = loadCriteriaSet;
   }
 
   let greeting = agent ? `Hello ${agent},\n\nYou can find the details about your evaluation below:\n\n` : "";
-  let parting = '____________________________\n\nThanks for reading your feedback.\n\nKeep checking your metrics:\n\nhttps://apps.powerapps.com/play/5195f0c7-73f5-4350-bd49-dfedf64c3c17';
+  let parting = '____________________________\n\nThank you for your effort and dedication to our customers! \n\nHave an amazing day!\n\nKeep checking your metrics:\n\nhttps://apps.powerapps.com/play/5195f0c7-73f5-4350-bd49-dfedf64c3c17';
 
   let finalText = greeting + header;
 
@@ -334,4 +335,5 @@ window.onload = loadCriteriaSet;
 <button onclick="clearAll()" style="margin-top: 10px; padding: 10px 20px;">Clear All</button>
 </body>
 </html>
+
 
